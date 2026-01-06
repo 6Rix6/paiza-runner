@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
-import * as path from "path";
-import { runAndWait, detectLanguage, DetailsResponse } from "../lib/paizaApi";
-import { getWebviewContent } from "../utils/utils";
+import { runAndWait, DetailsResponse } from "../lib/paizaApi";
+import { BasePanel, PanelConfig } from "./BasePanel";
 import scrapeAtCoder from "../lib/scrapeAtCoder";
 
 /**
@@ -16,65 +15,25 @@ export interface TestCaseResult {
   status: "pending" | "running" | "completed" | "error";
 }
 
+const PANEL_CONFIG: PanelConfig = {
+  viewType: "paizaMultiTest",
+  title: "Paiza Multi-Test Runner",
+  webviewJsPath: ["dist", "multiTestWebview.js"],
+};
+
 /**
  * WebView Panel for Multi-Test Case Runner
  * Provides GUI for running multiple test cases in parallel
  */
-export class MultiTestPanel {
+export class MultiTestPanel extends BasePanel<MultiTestPanel> {
   public static currentPanel: MultiTestPanel | undefined;
-  private readonly _panel: vscode.WebviewPanel;
-  private _disposables: vscode.Disposable[] = [];
-  private _targetDocument: vscode.TextDocument | undefined;
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
-    this._panel = panel;
-    this._panel.webview.html = getWebviewContent(
-      this._panel.webview,
-      extensionUri,
-      ["dist", "multiTestWebview.js"]
-    );
+    super(panel, extensionUri, PANEL_CONFIG);
+  }
 
-    // Handle messages from webview
-    this._panel.webview.onDidReceiveMessage(
-      async (message) => {
-        switch (message.command) {
-          case "runAll":
-            await this._runAllTestCases(message.language, message.testCases);
-            break;
-
-          case "getCurrentLanguage":
-            if (this._targetDocument) {
-              this._setTargetDocument(this._targetDocument);
-            }
-            break;
-
-          case "getOpenEditors":
-            this._sendOpenEditors();
-            break;
-
-          case "setTargetFile":
-            const uri = message.uri;
-            if (uri) {
-              const document = vscode.workspace.textDocuments.find(
-                (doc) => doc.uri.toString() === uri
-              );
-              if (document) {
-                this._setTargetDocument(document);
-              }
-            }
-            break;
-
-          case "addTestCasesFromAtCoder":
-            await this._addTestCasesFromAtCoder();
-            break;
-        }
-      },
-      null,
-      this._disposables
-    );
-
-    // Handle disposal
-    this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+  protected _clearCurrentPanel(): void {
+    MultiTestPanel.currentPanel = undefined;
   }
 
   /**
@@ -84,24 +43,13 @@ export class MultiTestPanel {
     extensionUri: vscode.Uri,
     document: vscode.TextDocument
   ) {
-    const column = vscode.ViewColumn.Beside;
-
     if (MultiTestPanel.currentPanel) {
       MultiTestPanel.currentPanel._setTargetDocument(document);
-      MultiTestPanel.currentPanel._panel.reveal(column);
+      MultiTestPanel.currentPanel._panel.reveal(vscode.ViewColumn.Beside);
       return;
     }
 
-    const panel = vscode.window.createWebviewPanel(
-      "paizaMultiTest",
-      "Paiza Multi-Test Runner",
-      column,
-      {
-        enableScripts: true,
-        retainContextWhenHidden: true,
-      }
-    );
-
+    const panel = BasePanel._createPanel(PANEL_CONFIG);
     MultiTestPanel.currentPanel = new MultiTestPanel(panel, extensionUri);
     MultiTestPanel.currentPanel._setTargetDocument(document);
   }
@@ -116,50 +64,25 @@ export class MultiTestPanel {
     }
   }
 
-  public dispose() {
-    MultiTestPanel.currentPanel = undefined;
-    this._panel.dispose();
-    while (this._disposables.length) {
-      const disposable = this._disposables.pop();
-      if (disposable) {
-        disposable.dispose();
-      }
+  /**
+   * Handle messages from webview
+   */
+  protected async _handleMessage(message: any): Promise<void> {
+    // Try common messages first
+    if (await this._handleCommonMessage(message)) {
+      return;
     }
-  }
 
-  private _setTargetDocument(document: vscode.TextDocument) {
-    this._targetDocument = document;
-    // Auto-detect language and send to webview
-    const detectedLanguage = detectLanguage(document.languageId);
-    if (detectedLanguage) {
-      this._panel.webview.postMessage({
-        command: "setLanguage",
-        language: detectedLanguage,
-      });
+    // Handle panel-specific messages
+    switch (message.command) {
+      case "runAll":
+        await this._runAllTestCases(message.language, message.testCases);
+        break;
+
+      case "addTestCasesFromAtCoder":
+        await this._addTestCasesFromAtCoder();
+        break;
     }
-    // Send target file info
-    this._panel.webview.postMessage({
-      command: "setTargetFile",
-      uri: document.uri.toString(),
-      fileName: path.basename(document.fileName),
-    });
-  }
-
-  private _sendOpenEditors() {
-    // Get all visible text editors
-    const openEditors = vscode.workspace.textDocuments
-      .filter((doc) => !doc.isUntitled && doc.uri.scheme === "file")
-      .map((doc) => ({
-        uri: doc.uri.toString(),
-        fileName: path.basename(doc.fileName),
-        fullPath: doc.fileName,
-      }));
-
-    this._panel.webview.postMessage({
-      command: "openEditors",
-      editors: openEditors,
-      currentUri: this._targetDocument?.uri.toString(),
-    });
   }
 
   /**
@@ -169,33 +92,19 @@ export class MultiTestPanel {
     language: string,
     testCases: { input: string; expectedOutput?: string }[]
   ) {
-    // Get the latest source code from the target document
-    if (!this._targetDocument) {
-      this._panel.webview.postMessage({
-        command: "error",
-        error: "No file selected. Please open a file first.",
-      });
-      return;
-    }
-
-    // Get fresh content from the document (handles unsaved changes too)
-    const sourceCode = this._targetDocument.getText();
-    if (!sourceCode.trim()) {
-      this._panel.webview.postMessage({
-        command: "error",
-        error: "The current file is empty.",
-      });
+    const sourceCode = this._getSourceCode();
+    if (!sourceCode) {
       return;
     }
 
     // Show loading state
-    this._panel.webview.postMessage({ command: "loading", loading: true });
+    this._postMessage({ command: "loading", loading: true });
 
     try {
       // Create promises for all test cases
       const promises = testCases.map(async (testCase, index) => {
         // Notify that this test case is running
-        this._panel.webview.postMessage({
+        this._postMessage({
           command: "testCaseStatus",
           index,
           status: "running",
@@ -246,20 +155,23 @@ export class MultiTestPanel {
       const results = await Promise.all(promises);
 
       // Send all results
-      this._panel.webview.postMessage({
+      this._postMessage({
         command: "allResults",
         results,
       });
     } catch (error) {
-      this._panel.webview.postMessage({
+      this._postMessage({
         command: "error",
         error: error instanceof Error ? error.message : String(error),
       });
     } finally {
-      this._panel.webview.postMessage({ command: "loading", loading: false });
+      this._postMessage({ command: "loading", loading: false });
     }
   }
 
+  /**
+   * Add test cases from AtCoder problem page
+   */
   private async _addTestCasesFromAtCoder() {
     const result = await vscode.window.showInputBox({
       placeHolder: "https://atcoder.jp/contests/.../tasks/...",
@@ -279,7 +191,7 @@ export class MultiTestPanel {
 
       // TODO: switch language by user setting
 
-      this._panel.webview.postMessage({
+      this._postMessage({
         command: "addTestCases",
         testCases: problems.problemJp.samples,
       });

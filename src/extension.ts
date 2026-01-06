@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { PaizaPanel } from "./panels/PaizaPanel";
+import { SingleRunPanel } from "./panels/SingleRunPanel";
 import { MultiTestPanel } from "./panels/MultiTestPanel";
 
 /**
@@ -15,7 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
     (editor) => {
       if (editor) {
         lastActiveEditor = editor;
-        PaizaPanel.updateTargetDocument(editor.document);
+        SingleRunPanel.updateTargetDocument(editor.document);
         MultiTestPanel.updateTargetDocument(editor.document);
       }
     }
@@ -40,7 +40,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     // Open the WebView panel with document reference
-    PaizaPanel.createOrShow(context.extensionUri, document);
+    SingleRunPanel.createOrShow(context.extensionUri, document);
   });
 
   // Register the run multiple test cases command
