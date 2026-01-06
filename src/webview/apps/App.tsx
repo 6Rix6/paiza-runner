@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { DetailsResponse, SUPPORTED_LANGUAGES } from "../lib/paizaApi";
-import { Button, Dropdown, DropdownOption } from "./components";
+import { DetailsResponse, SUPPORTED_LANGUAGES } from "@/lib/paizaApi";
+import { Button, Dropdown, DropdownOption } from "../components";
+import type { OpenEditor } from "@/types/OpenEditor";
 
 const vscode = (window as any).acquireVsCodeApi();
-
-interface OpenEditor {
-  uri: string;
-  fileName: string;
-  fullPath: string;
-}
 
 const App = () => {
   const [language, setLanguage] = useState("");

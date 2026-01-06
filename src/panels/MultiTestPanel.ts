@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
-import { runAndWait, DetailsResponse } from "../lib/paizaApi";
+import { runAndWait, DetailsResponse } from "@/lib/paizaApi";
+import scrapeAtCoder from "@/lib/scrapeAtCoder";
 import { BasePanel, PanelConfig } from "./BasePanel";
-import scrapeAtCoder from "../lib/scrapeAtCoder";
 
 /**
  * Test case result for parallel execution
@@ -13,6 +13,7 @@ export interface TestCaseResult {
   result: DetailsResponse | null;
   error?: string;
   status: "pending" | "running" | "completed" | "error";
+  verdict: "AC" | "WA" | "RE" | "CE" | null;
 }
 
 const PANEL_CONFIG: PanelConfig = {

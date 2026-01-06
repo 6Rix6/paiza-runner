@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
-import { SingleRunPanel } from "./panels/SingleRunPanel";
-import { MultiTestPanel } from "./panels/MultiTestPanel";
+import { SingleRunPanel } from "@/panels/SingleRunPanel";
+import { MultiTestPanel } from "@/panels/MultiTestPanel";
 
 /**
  * Activate the extension

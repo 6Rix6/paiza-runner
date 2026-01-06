@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { runAndWait } from "../lib/paizaApi";
+import { runAndWait } from "@/lib/paizaApi";
 import { BasePanel, PanelConfig } from "./BasePanel";
 
 const PANEL_CONFIG: PanelConfig = {

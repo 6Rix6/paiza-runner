@@ -1,30 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { DetailsResponse, SUPPORTED_LANGUAGES } from "../lib/paizaApi";
-import { Button, Dropdown, DropdownOption } from "./components";
-import { SampleInput } from "../lib/scrapeAtCoder";
+import { SUPPORTED_LANGUAGES } from "@/lib/paizaApi";
+import { Button, Dropdown, DropdownOption } from "../components";
+import { SampleInput } from "@/lib/scrapeAtCoder";
+import { TestCaseResult } from "@/panels/MultiTestPanel";
+import type { OpenEditor } from "@/types/OpenEditor";
 
 const vscode = (window as any).acquireVsCodeApi();
-
-interface OpenEditor {
-  uri: string;
-  fileName: string;
-  fullPath: string;
-}
 
 interface TestCase {
   id: number;
   input: string;
   expectedOutput: string;
-}
-
-interface TestCaseResult {
-  index: number;
-  input: string;
-  expectedOutput?: string;
-  result: DetailsResponse | null;
-  error?: string;
-  status: "pending" | "running" | "completed" | "error";
-  verdict: "AC" | "WA" | "RE" | "CE" | null;
 }
 
 const MultiTestApp = () => {

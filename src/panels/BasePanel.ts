@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { detectLanguage } from "../lib/paizaApi";
-import { getWebviewContent } from "../utils/utils";
+import { detectLanguage } from "@/lib/paizaApi";
+import { getWebviewContent } from "@/utils/utils";
+import { OpenEditor } from "@/types/OpenEditor";
 
 /**
  * Configuration for creating a panel
@@ -105,7 +106,7 @@ export abstract class BasePanel<T extends BasePanel<T>> {
    */
   protected _sendOpenEditors() {
     // Get all visible text editors
-    const openEditors = vscode.workspace.textDocuments
+    const openEditors: OpenEditor[] = vscode.workspace.textDocuments
       .filter((doc) => !doc.isUntitled && doc.uri.scheme === "file")
       .map((doc) => ({
         uri: doc.uri.toString(),
