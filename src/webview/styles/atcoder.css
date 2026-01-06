@@ -44,6 +44,7 @@ pre {
   @apply w-full my-1 p-2 rounded;
   background-color: var(--vscode-input-background);
   font-family: "monospace";
+  overflow-x: auto;
 }
 
 hr {
