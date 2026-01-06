@@ -5,6 +5,7 @@ import { Button } from "../components";
 import { BoxArrowUpRight } from "../components/icons/BoxArrowUpRight";
 import "katex/dist/katex.min.css";
 import katex from "katex";
+import { Play } from "../components/icons/Play";
 
 const vscode = (window as any).acquireVsCodeApi();
 
@@ -74,10 +75,15 @@ const AtCoderProblemApp = () => {
           <h1 className="text-2xl font-bold">{problem.title}</h1>
           <p className="text-primary">{problem.executeConstraints}</p>
         </div>
-        <Button onClick={openLink} className="gap-2">
-          <BoxArrowUpRight />
-          <span className="hidden sm:block">Open in Browser</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => {}} className="gap-2">
+            <Play />
+            <span className="hidden sm:block">Run All Tests</span>
+          </Button>
+          <Button onClick={openLink}>
+            <BoxArrowUpRight />
+          </Button>
+        </div>
       </div>
       <Divider />
       <div

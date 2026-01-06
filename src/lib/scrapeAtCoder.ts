@@ -5,7 +5,6 @@ import { Element as DomElement } from "domhandler";
 export interface SampleInput {
   input: string;
   output: string;
-  description?: string;
 }
 
 export interface AtCoderProblem {
@@ -94,12 +93,10 @@ function parseSamples(
     if (inputSection.length && outputSection.length) {
       const input = inputSection.find("pre").first().text().trim();
       const output = outputSection.find("pre").first().text().trim();
-      const description = outputSection.find("p, ul").html()?.trim() || "";
 
       samples.push({
         input,
         output,
-        description: description || undefined,
       });
     }
   }

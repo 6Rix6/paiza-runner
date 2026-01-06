@@ -14,7 +14,7 @@ section {
 }
 
 details {
-  @apply my-1 p-2 rounded;
+  @apply my-1 p-2 rounded-xs;
   background-color: var(--vscode-textBlockQuote-background);
 
   summary {
@@ -33,7 +33,7 @@ details[open] {
 }
 
 blockquote {
-  @apply my-1 p-2 rounded;
+  @apply my-1 p-2 rounded-xs;
 }
 
 ul {
@@ -41,7 +41,7 @@ ul {
 }
 
 pre {
-  @apply w-full my-1 p-2 rounded;
+  @apply w-full my-1 p-2 rounded-xs;
   background-color: var(--vscode-input-background);
   font-family: "monospace";
   overflow-x: auto;
