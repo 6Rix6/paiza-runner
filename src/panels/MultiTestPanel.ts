@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { runAndWait, DetailsResponse } from "../lib/paizaApi";
-import scrapeAtCoder from "../lib/scrapeAtCoder";
+import { scrapeAtCoder } from "../lib/scrapeAtCoder";
 import { BasePanel, PanelConfig } from "./BasePanel";
 
 /**

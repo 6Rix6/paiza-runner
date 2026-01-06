@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-secondary: var(--vscode-descriptionForeground);
+}
+
+h3 {
+  @apply text-lg font-bold my-1;
+}
+
+section {
+  @apply my-3;
+  line-height: 1.5;
+}
+
+details {
+  @apply my-1 p-2 rounded;
+  background-color: var(--vscode-textBlockQuote-background);
+
+  summary {
+    @apply cursor-pointer;
+  }
+
+  ::marker {
+    @apply mr-1;
+  }
+}
+
+details[open] {
+  summary {
+    @apply mb-1;
+  }
+}
+
+blockquote {
+  @apply my-1 p-2 rounded;
+}
+
+ul {
+  @apply list-disc list-inside mx-2 my-1;
+}
+
+pre {
+  @apply w-full my-1 p-2 rounded;
+  background-color: var(--vscode-input-background);
+  font-family: "monospace";
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--vscode-settings-dropdownListBorder);
+  box-sizing: content-box;
+  height: 0;
+  margin: 4px 0;
+  width: 100%;
+}

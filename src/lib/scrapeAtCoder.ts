@@ -10,16 +10,22 @@ export interface SampleInput {
 
 export interface AtCoderProblem {
   language: "english" | "japanese";
+  id: string;
+  url: string;
   title: string;
   executeConstraints: string;
   bodyHtml: string;
   samples: SampleInput[];
 }
 
-async function scrapeAtCoder(
+export async function scrapeAtCoder(
   url: string
+  // TODO: switch language by user setting
+  // language: "japanese" | "english"
 ): Promise<{ problemEn: AtCoderProblem; problemJp: AtCoderProblem } | null> {
   try {
+    const id = url.split("/").pop()?.split("?").shift() ?? "";
+
     const html = await fetchHTML(url);
     const $ = cheerio.load(html);
 
@@ -32,6 +38,8 @@ async function scrapeAtCoder(
 
     const problemEn: AtCoderProblem = {
       language: "english",
+      id,
+      url,
       title,
       executeConstraints,
       bodyHtml: bodyEn.html()?.trim() ?? "",
@@ -40,6 +48,8 @@ async function scrapeAtCoder(
 
     const problemJp: AtCoderProblem = {
       language: "japanese",
+      id,
+      url,
       title,
       executeConstraints,
       bodyHtml: bodyJp.html()?.trim() ?? "",
@@ -62,7 +72,7 @@ async function fetchHTML(url: string) {
   }
 }
 
-export function parseSamples(
+function parseSamples(
   $: cheerio.CheerioAPI,
   element: cheerio.Cheerio<DomElement>
 ): SampleInput[] {
@@ -96,4 +106,3 @@ export function parseSamples(
 
   return samples;
 }
-export default scrapeAtCoder;
