@@ -3,7 +3,6 @@ import { BasePanel, PanelConfig } from "./BasePanel";
 import { scrapeAtCoder } from "../lib/scrapeAtCoder";
 import { AtCoderProblem } from "../lib/scrapeAtCoder";
 import { runAndWait } from "../lib/paizaApi";
-import { TestCaseResult } from "./MultiTestPanel";
 
 const PANEL_CONFIG: PanelConfig = {
   viewType: "atCoderProblem",

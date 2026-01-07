@@ -2,6 +2,7 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 import { Element as DomElement } from "domhandler";
 import { getSettingValue } from "../utils/getSettingValue";
+import { SETTINGS } from "../consts/appConfig";
 
 export interface SampleInput {
   input: string;
@@ -22,7 +23,9 @@ export async function scrapeAtCoder(
   url: string
 ): Promise<AtCoderProblem | null> {
   try {
-    const setting = getSettingValue<"English" | "Japanese">("atCoderLanguage");
+    const setting = getSettingValue<"English" | "Japanese">(
+      SETTINGS.atCoderLanguage
+    );
     const language = setting ?? "English";
 
     const langCode = getLanguageCode(language);

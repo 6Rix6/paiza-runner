@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { SingleRunPanel } from "./panels/SingleRunPanel";
 import { MultiTestPanel } from "./panels/MultiTestPanel";
 import { AtCoderProblemPanel } from "./panels/AtCoderProblemPanel";
+import { APP_CONFIG, COMMANDS } from "./consts/appConfig";
 
 /**
  * Activate the extension
@@ -24,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   // Register the run command
-  const runCommand = vscode.commands.registerCommand("paiza-runner.run", () => {
+  const runCommand = vscode.commands.registerCommand(COMMANDS.run, () => {
     const document = getDocument(lastActiveEditor);
     if (!document) {
       return;
@@ -36,7 +37,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Register the run multiple test cases command
   const runMultipleCommand = vscode.commands.registerCommand(
-    "paiza-runner.runMultiple",
+    COMMANDS.runMultiple,
     () => {
       const document = getDocument(lastActiveEditor);
       if (!document) {
@@ -50,7 +51,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Register the run atcoder problem command
   const runAtCoderProblemCommand = vscode.commands.registerCommand(
-    "paiza-runner.runAtCoderProblem",
+    COMMANDS.runAtCoderProblem,
     () => {
       const document = getDocument(lastActiveEditor);
       if (!document) {
@@ -78,7 +79,7 @@ const getDocument = (
   const editor = lastActiveEditor || vscode.window.activeTextEditor;
   if (!editor) {
     vscode.window.showErrorMessage(
-      "Paiza Runner: No active editor found. Please open a file first."
+      `${APP_CONFIG.appDisplayName}: No active editor found. Please open a file first.`
     );
     return;
   }
@@ -86,7 +87,7 @@ const getDocument = (
   const document = editor.document;
   if (!document.getText().trim()) {
     vscode.window.showWarningMessage(
-      "Paiza Runner: The current file is empty."
+      `${APP_CONFIG.appDisplayName}: The current file is empty.`
     );
     return;
   }
