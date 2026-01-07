@@ -2,6 +2,10 @@
 
 Run code directly from VS Code using the [Paiza.io](https://paiza.io/) online compiler.
 
+## screenshot
+
+![screenshot](./images/atcoder-panel.png)
+
 ## Features
 
 - **One-click execution** - Run your code without leaving VS Code
@@ -36,10 +40,12 @@ MIT
 
 [Paiza.io](https://paiza.io/) のオンラインコンパイラを使用して、VS Code から直接コードを実行できる拡張機能です。
 
+> AtCoder の表示言語を日本語に設定するには VS Code の設定メニューから 拡張機能 > Paiza Runner > AtCoder Language で`Japanese`を選択してください。
+
 ## 機能
 
 - **ワンクリック実行** - VS Code を離れずにコードを実行
-- **30以上の言語に対応** - Python, JavaScript, C, C++, Java, Go, Rust など
+- **30 以上の言語に対応** - Python, JavaScript, C, C++, Java, Go, Rust など
 - **言語自動検出** - ファイルの種類から自動的に言語を選択
 - **標準入力対応** - GUI から stdin データを入力可能
 - **リアルタイム結果表示** - stdout, stderr, 実行時間, メモリ使用量を表示
