@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { BasePanel, PanelConfig } from "./BasePanel";
-import { requireTask, scrapeAtCoder } from "../lib/scrapeAtCoder";
+import { requireContest, requireTask } from "../lib/scrapeAtCoder";
 import { AtCoderProblem } from "../lib/scrapeAtCoder";
 import { runAndWait } from "../lib/paizaApi";
 
@@ -44,16 +44,63 @@ export class AtCoderProblemPanel extends BasePanel<AtCoderProblemPanel> {
       return;
     }
 
+    this._createOrShowPanel(extensionUri, document, problem, undefined, true);
+  }
+
+  /**
+   * Create multiple panels from AtCoder contest
+   */
+  public static async createFromContest(
+    extensionUri: vscode.Uri,
+    document: vscode.TextDocument
+  ) {
+    let firstPanelId: string | null = null;
+    await requireContest((index, problem) => {
+      if (!firstPanelId) {
+        firstPanelId = problem.id;
+      }
+      const viewColumn = !index
+        ? vscode.ViewColumn.Beside
+        : vscode.ViewColumn.Active;
+      this._createOrShowPanel(
+        extensionUri,
+        document,
+        problem,
+        viewColumn,
+        !!index
+      );
+      // if (!!index && firstPanelId) {
+      //   const existingPanel = AtCoderProblemPanel._panels.get(firstPanelId);
+      //   if (existingPanel) {
+      //     existingPanel._panel.reveal(viewColumn ?? vscode.ViewColumn.Beside);
+      //     existingPanel._setTargetDocument(document);
+      //     AtCoderProblemPanel.currentPanel = existingPanel;
+      //   }
+      // }
+    });
+  }
+
+  private static _createOrShowPanel(
+    extensionUri: vscode.Uri,
+    document: vscode.TextDocument,
+    problem: AtCoderProblem,
+    viewColumn?: vscode.ViewColumn,
+    preserveFocus?: boolean
+  ) {
     // Check if a panel for this problem already exists
     const existingPanel = AtCoderProblemPanel._panels.get(problem.id);
     if (existingPanel) {
-      existingPanel._panel.reveal(vscode.ViewColumn.Beside);
+      existingPanel._panel.reveal(viewColumn ?? vscode.ViewColumn.Beside);
       existingPanel._setTargetDocument(document);
       AtCoderProblemPanel.currentPanel = existingPanel;
       return;
     }
 
-    const panel = BasePanel._createPanel(PANEL_CONFIG);
+    const panel = BasePanel._createPanel(
+      PANEL_CONFIG,
+      viewColumn,
+      preserveFocus
+    );
     panel.title = problem.id;
     AtCoderProblemPanel.currentPanel = new AtCoderProblemPanel(
       panel,

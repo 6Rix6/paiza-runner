@@ -20,9 +20,69 @@ export interface AtCoderProblem {
   samples: SampleInput[];
 }
 
-export const scrapeAtCoder = async (
-  url: string
-): Promise<AtCoderProblem | null> => {
+type ProgressCallback = (progress: number, problem: AtCoderProblem) => void;
+
+export const requireTask = async (): Promise<AtCoderProblem | null> => {
+  const result = await vscode.window.showInputBox({
+    placeHolder: "https://atcoder.jp/contests/.../tasks/...",
+    prompt: "Enter AtCoder task ID or URL",
+    password: false,
+  });
+
+  if (!result) {
+    return null;
+  }
+
+  const url = generateTaskUrl(result);
+
+  if (!url) {
+    vscode.window.showErrorMessage("Invalid AtCoder task id");
+    return null;
+  }
+
+  try {
+    const problem = await scrapeTask(url);
+    return problem;
+  } catch (error) {
+    vscode.window.showErrorMessage(
+      error instanceof Error ? error.message : String(error)
+    );
+    return null;
+  }
+};
+
+export const requireContest = async (
+  onProgress?: ProgressCallback
+): Promise<AtCoderProblem[] | null> => {
+  const result = await vscode.window.showInputBox({
+    placeHolder: "https://atcoder.jp/contests/...",
+    prompt: "Enter AtCoder contest ID or URL",
+    password: false,
+  });
+
+  if (!result) {
+    return null;
+  }
+
+  const url = generateContestUrl(result);
+
+  if (!url) {
+    vscode.window.showErrorMessage("Invalid AtCoder contest id");
+    return null;
+  }
+
+  try {
+    const problems = await scrapeContest(url, onProgress);
+    return problems;
+  } catch (error) {
+    vscode.window.showErrorMessage(
+      error instanceof Error ? error.message : String(error)
+    );
+    return null;
+  }
+};
+
+const scrapeTask = async (url: string): Promise<AtCoderProblem | null> => {
   try {
     const setting = getSettingValue<"English" | "Japanese">(
       SETTINGS.atCoderLanguage
@@ -61,6 +121,47 @@ export const scrapeAtCoder = async (
     throw error;
   }
 };
+
+const scrapeContest = async (
+  url: string,
+  onProgress?: ProgressCallback
+): Promise<AtCoderProblem[] | null> => {
+  try {
+    const html = await fetchHTML(url);
+    const $ = cheerio.load(html);
+
+    const taskUrls = $("tbody td a")
+      .map((_, element) => {
+        return $(element).attr("href");
+      })
+      .get();
+
+    const uniqueUrls = [...new Set(taskUrls)];
+
+    if (!uniqueUrls.length) {
+      throw new Error(`Failed to parse contest page.`);
+    }
+
+    const problems: AtCoderProblem[] = [];
+
+    for (let i = 0; i < uniqueUrls.length; i++) {
+      const taskUrl = uniqueUrls[i];
+      const problem = await scrapeTask(`https://atcoder.jp${taskUrl}`);
+      if (problem) {
+        problems.push(problem);
+        onProgress?.(i, problem);
+      }
+      await sleep(1000);
+    }
+
+    return problems;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const sleep = (time: number) =>
+  new Promise((resolve) => setTimeout(resolve, time));
 
 const fetchHTML = async (url: string) => {
   try {
@@ -118,36 +219,7 @@ const updateLangParam = (url: string, langCode: string) => {
   return urlObj.toString();
 };
 
-export const requireTask = async (): Promise<AtCoderProblem | null> => {
-  const result = await vscode.window.showInputBox({
-    placeHolder: "https://atcoder.jp/contests/.../tasks/...",
-    prompt: "Enter AtCoder contest task id or URL",
-    password: false,
-  });
-
-  if (!result) {
-    return null;
-  }
-
-  const url = generateAtCoderUrl(result);
-
-  if (!url) {
-    vscode.window.showErrorMessage("Invalid AtCoder task id");
-    return null;
-  }
-
-  try {
-    const problem = await scrapeAtCoder(url);
-    return problem;
-  } catch (error) {
-    vscode.window.showErrorMessage(
-      error instanceof Error ? error.message : String(error)
-    );
-    return null;
-  }
-};
-
-const generateAtCoderUrl = (id: string): string | null => {
+const generateTaskUrl = (id: string): string | null => {
   const match = id.match(/([a-z0-9]+(?:_[a-z0-9]+)*)$/);
 
   if (!match) return null;
@@ -161,4 +233,14 @@ const generateAtCoderUrl = (id: string): string | null => {
     /_/g,
     "-"
   )}/tasks/${taskId}`;
+};
+
+const generateContestUrl = (id: string): string | null => {
+  const match = id.match(/([a-z0-9]+(?:_[a-z0-9]+)*)$/);
+
+  if (!match) return null;
+
+  const contestId = match[1];
+
+  return `https://atcoder.jp/contests/${contestId}/tasks`;
 };

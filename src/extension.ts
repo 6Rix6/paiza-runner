@@ -63,11 +63,26 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  // Register the run atcoder contest command
+  const runAtCoderContestCommand = vscode.commands.registerCommand(
+    COMMANDS.runAtCoderContest,
+    () => {
+      const document = getDocument(lastActiveEditor);
+      if (!document) {
+        return;
+      }
+
+      // Open the AtCoder Problem WebView panel with document reference
+      AtCoderProblemPanel.createFromContest(context.extensionUri, document);
+    }
+  );
+
   context.subscriptions.push(
     editorChangeListener,
     runCommand,
     runMultipleCommand,
-    runAtCoderProblemCommand
+    runAtCoderProblemCommand,
+    runAtCoderContestCommand
   );
 }
 

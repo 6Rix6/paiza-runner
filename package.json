@@ -27,7 +27,11 @@
       },
       {
         "command": "atcoder-utils.runAtCoderProblem",
-        "title": "AtCoder Utils: Run AtCoder Problem"
+        "title": "AtCoder Utils: Open AtCoder Problem"
+      },
+      {
+        "command": "atcoder-utils.runAtCoderContest",
+        "title": "AtCoder Utils: Open AtCoder Contest"
       }
     ],
     "keybindings": [

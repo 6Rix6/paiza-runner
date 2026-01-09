@@ -189,12 +189,16 @@ export abstract class BasePanel<T extends BasePanel<T>> {
   /**
    * Helper to create or show a panel
    */
-  protected static _createPanel(config: PanelConfig): vscode.WebviewPanel {
-    const column = vscode.ViewColumn.Beside;
+  protected static _createPanel(
+    config: PanelConfig,
+    viewColumn?: vscode.ViewColumn,
+    preserveFocus?: boolean
+  ): vscode.WebviewPanel {
+    const column = viewColumn ?? vscode.ViewColumn.Beside;
     return vscode.window.createWebviewPanel(
       config.viewType,
       config.title,
-      column,
+      { viewColumn: column, preserveFocus: preserveFocus },
       {
         enableScripts: true,
         retainContextWhenHidden: true,
