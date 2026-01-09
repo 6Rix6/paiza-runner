@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "repository": {
     "type": "git",
-    "url": "https://github.com/6Rix6/paiza-runner.git"
+    "url": "https://github.com/6Rix6/atcoder-utils.git"
   },
   "engines": {
     "vscode": "^1.104.0"
