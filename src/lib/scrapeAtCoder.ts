@@ -21,6 +21,15 @@ export interface AtCoderProblem {
   samples: SampleInput[];
 }
 
+export interface ProblemLink {
+  id: string;
+  name: string;
+  url: string;
+  timeLimit: string;
+  memoryLimit: string;
+  submitUrl: string;
+}
+
 type ProgressCallback = (progress: number, problem: AtCoderProblem) => void;
 
 export const requireTask = async (): Promise<AtCoderProblem | null> => {
@@ -94,6 +103,7 @@ const scrapeTask = async (url: string): Promise<AtCoderProblem | null> => {
     const targetUrl = updateLangParam(url, langCode);
 
     const html = await fetchHTML(targetUrl);
+    console.log({ html });
     const $ = cheerio.load(html);
 
     const id = url.split("/").pop()?.split("?").shift() ?? "";
@@ -129,25 +139,17 @@ const scrapeContest = async (
 ): Promise<AtCoderProblem[] | null> => {
   try {
     const html = await fetchHTML(url);
-    const $ = cheerio.load(html);
+    const links = extractProblemLinks(html);
 
-    const taskUrls = $("tbody td a")
-      .map((_, element) => {
-        return $(element).attr("href");
-      })
-      .get();
-
-    const uniqueUrls = [...new Set(taskUrls)];
-
-    if (!uniqueUrls.length) {
+    if (!links.length) {
       throw new Error(`Failed to parse contest page.`);
     }
 
     const problems: AtCoderProblem[] = [];
 
-    for (let i = 0; i < uniqueUrls.length; i++) {
-      const taskUrl = uniqueUrls[i];
-      const problem = await scrapeTask(`https://atcoder.jp${taskUrl}`);
+    for (let i = 0; i < links.length; i++) {
+      const link = links[i];
+      const problem = await scrapeTask(link.url);
       if (problem) {
         problems.push(problem);
         onProgress?.(i, problem);
@@ -160,6 +162,36 @@ const scrapeContest = async (
     throw error;
   }
 };
+
+function extractProblemLinks(html: string): ProblemLink[] {
+  const $ = cheerio.load(html);
+  const problems: ProblemLink[] = [];
+
+  $("table.table-bordered tbody tr").each((_, row) => {
+    const $row = $(row);
+
+    const id = $row.find("td:nth-child(1) a").text().trim();
+    const nameLink = $row.find("td:nth-child(2) a");
+    const name = nameLink.text().trim();
+    const url = nameLink.attr("href") || "";
+    const timeLimit = $row.find("td:nth-child(3)").text().trim();
+    const memoryLimit = $row.find("td:nth-child(4)").text().trim();
+    const submitUrl = $row.find("td:nth-child(5) a").attr("href") || "";
+
+    if (id && name && url) {
+      problems.push({
+        id,
+        name,
+        url: `https://atcoder.jp${url}`,
+        timeLimit,
+        memoryLimit,
+        submitUrl: `https://atcoder.jp${submitUrl}`,
+      });
+    }
+  });
+
+  return problems;
+}
 
 const sleep = (time: number) =>
   new Promise((resolve) => setTimeout(resolve, time));
